@@ -8,6 +8,7 @@ using Calamari.Common.Plumbing.FileSystem;
 using Calamari.Common.Plumbing.Variables;
 using Calamari.Deployment;
 using Calamari.Deployment.Conventions;
+using Calamari.FeatureToggles;
 using Calamari.Kubernetes.Conventions;
 using Calamari.Kubernetes.Integration;
 
@@ -18,6 +19,7 @@ namespace Calamari.Kubernetes.Commands
     {
         public const string Name = "kubernetes-apply-raw-yaml";
 
+        private readonly IVariables variables;
         private readonly Func<GatherAndApplyRawYamlConvention> gatherAndApplyRawYamlFactory;
         private readonly Func<ResourceStatusReportConvention> resourceStatusReportFactory;
 
@@ -43,8 +45,18 @@ namespace Calamari.Kubernetes.Commands
             structuredConfigurationVariablesFactory, awsAuthConventionFactory, kubernetesAuthContextFactory,
             conventionProcessorFactory, runningDeploymentFactory, fileSystem, extractPackage)
         {
+            this.variables = variables;
             this.gatherAndApplyRawYamlFactory = gatherAndApplyRawYamlFactory;
             this.resourceStatusReportFactory = resourceStatusReportFactory;
+        }
+
+        public override int Execute(string[] commandLineArguments)
+        {
+            if (!FeatureToggle.MultiGlobPathsForRawYamlFeatureToggle.IsEnabled(variables))
+                throw new InvalidOperationException(
+                    "Unable to execute the Kubernetes Apply Raw YAML Command because the appropriate feature has not been enabled.");
+
+            return base.Execute(commandLineArguments);
         }
 
         protected override IEnumerable<IInstallConvention> CommandSpecificConventions()
