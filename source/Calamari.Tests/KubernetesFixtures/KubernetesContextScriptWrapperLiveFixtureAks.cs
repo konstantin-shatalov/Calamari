@@ -47,10 +47,10 @@ namespace Calamari.Tests.KubernetesFixtures
             azurermResourceGroup = jsonOutput["aks_rg_name"]["value"].Value<string>();
         }
 
-        protected override Dictionary<string, string> GetEnvironmentVars()
+        protected override Dictionary<string, string> GetEnvironmentVariables()
         {
             azureSubscriptionId = ExternalVariables.Get(ExternalVariable.AzureSubscriptionId);
-            return new Dictionary<string, string>()
+            return new Dictionary<string, string>(base.GetEnvironmentVariables())
             {
                 { "ARM_SUBSCRIPTION_ID", azureSubscriptionId},
                 { "ARM_CLIENT_ID", ExternalVariables.Get(ExternalVariable.AzureSubscriptionClientId) },

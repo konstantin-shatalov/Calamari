@@ -84,7 +84,7 @@ namespace Calamari.Tests.KubernetesFixtures
         {
             var commandLineRunner = new CommandLineRunner(Log, variables);
             var engine = new ScriptEngine(wrappers);
-            var result = engine.Execute(new Script(scriptName), variables, commandLineRunner, GetEnvironments());
+            var result = engine.Execute(new Script(scriptName), variables, commandLineRunner, GetEnvironmentVariables());
 
             return new CalamariResult(result.ExitCode, new CaptureCommandInvocationOutputSink());
         }
@@ -134,7 +134,7 @@ namespace Calamari.Tests.KubernetesFixtures
 
                 var calamariCommand = Calamari().Action(command)
                                                 .Argument("variables", variablesFile.FilePath)
-                                                .WithEnvironmentVariables(GetEnvironments())
+                                                .WithEnvironmentVariables(GetEnvironmentVariables())
                                                 .WithWorkingDirectory(workingDirectory)
                                                 .OutputToLog(true);
 
@@ -142,7 +142,7 @@ namespace Calamari.Tests.KubernetesFixtures
             }
         }
 
-        protected virtual Dictionary<string, string> GetEnvironments()
+        protected virtual Dictionary<string, string> GetEnvironmentVariables()
         {
             return new Dictionary<string, string>();
         }

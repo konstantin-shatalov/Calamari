@@ -57,7 +57,7 @@ namespace Calamari.Tests.KubernetesFixtures
             variables.Set(KubeCtlExecutableVariableName, installTools.KubectlExecutable);
         }
 
-        protected override Dictionary<string, string> GetEnvironments()
+        protected override Dictionary<string, string> GetEnvironmentVariables()
         {
             var currentPath = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
             var delimiter = CalamariEnvironment.IsRunningOnWindows ? ";" : ":";
@@ -76,7 +76,7 @@ namespace Calamari.Tests.KubernetesFixtures
                 }
             }
 
-            return new Dictionary<string, string> { { "PATH", currentPath } };
+            return new Dictionary<string, string>(base.GetEnvironmentVariables()) { { "PATH", currentPath } };
         }
 
         protected abstract IEnumerable<string> ToolsToAddToPath(InstallTools tools);
@@ -112,12 +112,10 @@ namespace Calamari.Tests.KubernetesFixtures
             return RunTerraformInternal(terraformWorkingFolder, env, true, args);
         }
 
-        protected abstract Dictionary<string, string> GetEnvironmentVars();
-
         string RunTerraformInternal(string terraformWorkingFolder, Dictionary<string, string> env, bool printOut, params string[] args)
         {
             var stdOut = new StringBuilder();
-            var environmentVars = GetEnvironmentVars();
+            var environmentVars = GetEnvironmentVariables();
             environmentVars["TF_IN_AUTOMATION"] = bool.TrueString;
             environmentVars.AddRange(env);
 

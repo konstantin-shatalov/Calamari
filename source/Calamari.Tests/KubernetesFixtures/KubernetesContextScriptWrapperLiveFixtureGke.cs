@@ -32,6 +32,7 @@ namespace Calamari.Tests.KubernetesFixtures
         protected override async Task InstallOptionalTools(InstallTools tools)
         {
             await tools.InstallGCloud();
+            tools.InstallGCloudGkeAuthPlugin(Log, tools.GcloudExecutable);
         }
 
         protected override void ExtractVariablesFromTerraformOutput(JObject jsonOutput)
@@ -44,11 +45,16 @@ namespace Calamari.Tests.KubernetesFixtures
             gkeLocation = jsonOutput["gke_cluster_location"]["value"].Value<string>();
         }
 
-        protected override Dictionary<string, string> GetEnvironmentVars()
+        protected override Dictionary<string, string> GetEnvironmentVariables()
         {
-            return new Dictionary<string, string>
+            return new Dictionary<string, string>(base.GetEnvironmentVariables())
             {
-                { "GOOGLE_CLOUD_KEYFILE_JSON", ExternalVariables.Get(ExternalVariable.GoogleCloudJsonKeyfile) }
+                {
+                    "GOOGLE_CLOUD_KEYFILE_JSON", ExternalVariables.Get(ExternalVariable.GoogleCloudJsonKeyfile)
+                },
+                {
+                    "USE_GKE_GCLOUD_AUTH_PLUGIN", bool.TrueString
+                }
             };
         }
 

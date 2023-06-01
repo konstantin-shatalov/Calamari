@@ -72,9 +72,9 @@ namespace Calamari.Tests.KubernetesFixtures
             awsIamInstanceProfileName = jsonOutput["aws_iam_instance_profile_name"]["value"].Value<string>();
         }
 
-        protected override Dictionary<string, string> GetEnvironmentVars()
+        protected override Dictionary<string, string> GetEnvironmentVariables()
         {
-            return new Dictionary<string, string>
+            return new Dictionary<string, string>(base.GetEnvironmentVariables())
             {
                 { "AWS_ACCESS_KEY_ID", ExternalVariables.Get(ExternalVariable.AwsCloudFormationAndS3AccessKey) },
                 { "AWS_SECRET_ACCESS_KEY", ExternalVariables.Get(ExternalVariable.AwsCloudFormationAndS3SecretKey) },

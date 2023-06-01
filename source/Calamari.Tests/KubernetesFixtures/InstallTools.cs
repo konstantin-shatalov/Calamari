@@ -8,7 +8,9 @@ using System.Threading.Tasks;
 using Calamari.Common.Features.Processes;
 using Calamari.Common.Plumbing;
 using Calamari.Common.Plumbing.FileSystem;
+using Calamari.Common.Plumbing.Logging;
 using Calamari.Common.Plumbing.Retry;
+using Calamari.Common.Plumbing.Variables;
 using Calamari.Testing;
 using Calamari.Testing.Helpers;
 using Newtonsoft.Json.Linq;
@@ -203,7 +205,7 @@ namespace Calamari.Tests.KubernetesFixtures
             using (var client = new HttpClient())
             {
                 GcloudExecutable = await DownloadCli("gcloud",
-                    () => Task.FromResult<(string, string)>(("346.0.0", string.Empty)),
+                    () => Task.FromResult<(string, string)>(("432.0.0", string.Empty)),
                     async (destinationDirectoryName, tuple) =>
                     {
                         var downloadUrl = GetGcloudDownloadLink(tuple.version);
@@ -216,6 +218,18 @@ namespace Calamari.Tests.KubernetesFixtures
 
                         return GetGcloudExecutablePath(destinationDirectoryName);
                     });
+            }
+        }
+
+        public void InstallGCloudGkeAuthPlugin(ILog logger, string gcloudExecutablePath)
+        {
+            var runner = new CommandLineRunner(logger, new CalamariVariables());
+            var result = runner.Execute(new CommandLineInvocation(gcloudExecutablePath,
+                "components", "install", "gke-gcloud-auth-plugin", "--quiet"));
+            if (result.ExitCode != 0)
+            {
+                throw new InvalidOperationException(
+                    $"Unable to install component gke-gcloud-auth-plugin due to error: {result.Errors}");
             }
         }
 
@@ -332,7 +346,7 @@ namespace Calamari.Tests.KubernetesFixtures
             if (CalamariEnvironment.IsRunningOnNix)
                 return $"google-cloud-sdk-{currentVersion}-linux-x86_64.tar.gz";
             if (CalamariEnvironment.IsRunningOnMac)
-                return $"google-cloud-sdk-{currentVersion}-darwin-x86_64-bundled-python.tar.gz";
+                return $"google-cloud-sdk-{currentVersion}-darwin-x86_64.tar.gz";
 
             return $"google-cloud-sdk-{currentVersion}-windows-x86_64-bundled-python.zip";
         }

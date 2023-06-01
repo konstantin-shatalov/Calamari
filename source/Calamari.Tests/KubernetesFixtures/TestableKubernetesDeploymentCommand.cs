@@ -60,7 +60,12 @@ namespace Calamari.Tests.KubernetesFixtures
                     throw new InvalidOperationException("Unable to set KubeCtl");
                 }
 
-                kubectl.ExecuteCommand("cluster-info");
+                var result = kubectl.ExecuteCommand("cluster-info");
+
+                if (result.ExitCode != 0 || result.HasErrors)
+                {
+                    throw new Exception(result.Errors);
+                }
             }
         }
     }
