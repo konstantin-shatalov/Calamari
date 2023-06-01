@@ -31,7 +31,7 @@ namespace Calamari.Tests.KubernetesFixtures
 
         protected override async Task InstallOptionalTools(InstallTools tools)
         {
-            await tools.InstallGCloud();
+            await tools.InstallGCloud(Log);
             tools.InstallGCloudGkeAuthPlugin(Log, tools.GcloudExecutable);
         }
 

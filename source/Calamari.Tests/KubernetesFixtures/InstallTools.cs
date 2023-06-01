@@ -200,7 +200,7 @@ namespace Calamari.Tests.KubernetesFixtures
             }
         }
 
-        public async Task InstallGCloud()
+        public async Task InstallGCloud(ILog logger)
         {
             using (var client = new HttpClient())
             {
@@ -215,6 +215,10 @@ namespace Calamari.Tests.KubernetesFixtures
                             client,
                             downloadUrl,
                             destinationDirectoryName);
+
+                        var scriptExtension = CalamariEnvironment.IsRunningOnWindows ? "bat" : "sh";
+                        new CommandLineRunner(logger, new CalamariVariables()).Execute(
+                            new CommandLineInvocation(Path.Combine(destinationDirectoryName, $"install.{scriptExtension}"), "-q"));
 
                         return GetGcloudExecutablePath(destinationDirectoryName);
                     });
