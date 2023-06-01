@@ -200,7 +200,7 @@ namespace Calamari.Tests.KubernetesFixtures
             }
         }
 
-        public async Task InstallGCloud(ILog logger)
+        public async Task InstallGCloud()
         {
             using (var client = new HttpClient())
             {
@@ -208,26 +208,48 @@ namespace Calamari.Tests.KubernetesFixtures
                     () => Task.FromResult<(string, string)>(("432.0.0", string.Empty)),
                     async (destinationDirectoryName, tuple) =>
                     {
+                        var logger = ConsoleLog.Instance;
                         var downloadUrl = GetGcloudDownloadLink(tuple.version);
                         var fileName = GetGcloudZipFileName(tuple.version);
-
+                        logger.Info("Downloading gcloud");
                         await DownloadGcloud(fileName,
                             client,
                             downloadUrl,
                             destinationDirectoryName);
+                        logger.Info("gcloud downloaded");
 
+
+                        var runner = new CommandLineRunner(ConsoleLog.Instance, new CalamariVariables());
+                        if (!CalamariEnvironment.IsRunningOnWindows)
+                        {
+                            logger.Info("updating permissions");
+                            var chmodResult =
+                                runner.Execute(
+                                    new CommandLineInvocation("chmod", "-R", "777", destinationDirectoryName));
+                            if (chmodResult.ExitCode != 0)
+                            {
+                                throw new InvalidOperationException(
+                                    $"Unable to ensure that write permissions have been granted: {chmodResult.Errors}");
+                            }
+                            logger.Info("permissions updated");
+                        }
+
+                        logger.Info("Running install script");
                         var scriptExtension = CalamariEnvironment.IsRunningOnWindows ? "bat" : "sh";
-                        new CommandLineRunner(logger, new CalamariVariables()).Execute(
-                            new CommandLineInvocation(Path.Combine(destinationDirectoryName, $"install.{scriptExtension}"), "-q"));
-
+                        runner.Execute(
+                            new CommandLineInvocation(
+                                Path.Combine(destinationDirectoryName, $"install.{scriptExtension}"), "-q"));
+                        logger.Info("GCloud successfully installed");
                         return GetGcloudExecutablePath(destinationDirectoryName);
                     });
             }
         }
 
-        public void InstallGCloudGkeAuthPlugin(ILog logger, string gcloudExecutablePath)
+        public void InstallGCloudGkeAuthPlugin(string gcloudExecutablePath)
         {
-            var runner = new CommandLineRunner(logger, new CalamariVariables());
+            var logger = ConsoleLog.Instance;
+            logger.Info("Installing gke-gcloud-auth-plugin");
+            var runner = new CommandLineRunner(ConsoleLog.Instance, new CalamariVariables());
             var result = runner.Execute(new CommandLineInvocation(gcloudExecutablePath,
                 "components", "install", "gke-gcloud-auth-plugin", "--quiet"));
             if (result.ExitCode != 0)
@@ -235,6 +257,7 @@ namespace Calamari.Tests.KubernetesFixtures
                 throw new InvalidOperationException(
                     $"Unable to install component gke-gcloud-auth-plugin due to error: {result.Errors}");
             }
+            logger.Info("gke-gcloud-auth-plugin successfully installed");
         }
 
         static void AddExecutePermission(string exePath)
