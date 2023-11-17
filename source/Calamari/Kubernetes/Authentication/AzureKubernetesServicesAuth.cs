@@ -4,9 +4,7 @@ using Calamari.Common.Plumbing.Logging;
 using Calamari.Common.Plumbing.Variables;
 using Calamari.Kubernetes.Integration;
 using Octopus.CoreUtilities.Extensions;
-#if !NET40
 using Microsoft.Identity.Client;
-#endif
 
 namespace Calamari.Kubernetes.Authentication
 {
@@ -53,11 +51,8 @@ namespace Calamari.Kubernetes.Authentication
                 var jwt = deploymentVariables.Get("Octopus.OpenIdConnect.Jwt");
 
                 var isOidc = !jwt.IsNullOrEmpty();
-#if !NET40
+
                 var credential = isOidc ? jwt : password;
-#else
-                var credential = password;
-#endif
 
                 azureCli.ConfigureAzAccount(subscriptionId, tenantId, clientId, credential, azEnvironment, isOidc);
 
